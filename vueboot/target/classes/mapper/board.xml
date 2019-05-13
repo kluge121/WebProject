@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="com.ssafy.edu.vue.dao.BoardMapper">
+ 	<select id="findAllBoard"
+ 	resultType="com.ssafy.edu.vue.dto.BoardDto">
+ 	SELECT NUMBER,USER_ID,TITLE,CONTENT,DATE,CLICK
+ 	FROM BOARD_INFO
+ 	ORDER BY NUMBER
+ 	</select>
+ 	<insert id="addBoard"
+ 	parameterType="com.ssafy.edu.vue.dto.BoardDto">
+ 	INSERT INTO BOARD_INFO(USER_ID,TITLE,CONTENT,DATE,CLICK)
+ 	VALUE(#{user_id},#{title},#{content},#{date},0)
+ 	</insert>
+ 	<insert id="addAnswerBoard"
+ 	parameterType="com.ssafy.edu.vue.dto.BoardAnswerDto">
+ 	INSERT INTO ANSWER_INFO(NUMBER,TITLE,CONTENT,DATE)
+ 	VALUE(#{number},#{title},#{content},#{date})
+ 	</insert>
+ 	<select id="findBoardByNum"
+ 	parameterType="java.lang.Integer"
+ 	resultType="com.ssafy.edu.vue.dto.BoardDto">
+ 	SELECT NUMBER,USER_ID,TITLE,CONTENT,DATE,CLICK
+ 	FROM BOARD_INFO
+ 	where number=#{number}
+ 	</select>
+ 	<select id="findAnswerByNum"
+ 	parameterType="java.lang.Integer"
+ 	resultType="com.ssafy.edu.vue.dto.BoardAnswerDto">
+ 	SELECT NUMBER,TITLE,CONTENT,DATE
+ 	FROM ANSWER_INFO
+ 	WHERE NUMBER=#{number}
+ 	</select>
+ 	<select id="findNumber"
+ 	resultType="java.lang.Integer">
+ 		SELECT COUNT(NUMBER)  FROM BOARD_INFO
+ 	</select>
+ 	<update id="updateBoard"
+ 	parameterType="com.ssafy.edu.vue.dto.BoardDto">
+ 	UPDATE BOARD_INFO SET TITLE=#{title},CONTENT=#{content},DATE=#{date}
+ 	WHERE NUMBER=#{number}
+ 	</update>
+ 	<update id="updateAnswerBoard"
+ 	parameterType="com.ssafy.edu.vue.dto.BoardAnswerDto">
+ 	UPDATE ANSWER_INFO SET TITLE=#{title},CONTENT=#{content},DATE=#{date}
+ 	WHERE NUMBER=#{number}
+ 	</update>
+ 	<delete id="deleteBoard"
+ 	parameterType="java.lang.Integer">
+ 	DELETE FROM BOARD_INFO WHERE NUMBER=#{number}
+ 	</delete>
+ 	<update id="updateViewCnt"
+ 	parameterType="java.lang.Integer">
+ 	UPDATE BOARD_INFO SET CLICK = CLICK+1
+ 	WHERE NUMBER=#{number}
+ 	</update>
+ </mapper>

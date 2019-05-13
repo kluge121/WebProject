@@ -1,0 +1,102 @@
+package com.ssafy.edu.vue.controller;
+
+
+import java.util.Date;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.ssafy.edu.vue.dto.NoticeDto;
+import com.ssafy.edu.vue.help.BoolResult;
+import com.ssafy.edu.vue.help.NumberResult;
+import com.ssafy.edu.vue.service.NoticeService;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+
+@CrossOrigin(origins = {"*"}, maxAge = 6000)
+@RestController
+@RequestMapping("/api")
+@Api(value="SSAFY", description="SafeFood Notice")
+public class NoticeController {
+   public static final Logger logger = LoggerFactory.getLogger(NoticeController.class);
+   
+   @Autowired
+   private NoticeService noticeservice;
+   
+   @ApiOperation(value = "모든 공지사항을 반환한다.", response = List.class)
+   @RequestMapping(value= "/showAllNotice",method = RequestMethod.GET)
+   public ResponseEntity<List<NoticeDto>> showAllNotice() throws Exception{
+      logger.info("1.showAllNotice"+new Date());
+      List<NoticeDto> notices = noticeservice.showAllNotice();
+      if(notices.isEmpty())
+         return new ResponseEntity(HttpStatus.NO_CONTENT);
+      return new ResponseEntity<List<NoticeDto>>(notices,HttpStatus.OK);
+   }
+   
+   @ApiOperation(value = "공지사항 상세보기 반환한다.", response = NoticeDto.class)
+   @RequestMapping(value= "/detailNotice/{num}",method = RequestMethod.GET)
+   public ResponseEntity<NoticeDto> detailNotice(@PathVariable int num) throws Exception{
+      logger.info("2.detailNotice"+new Date());
+      NoticeDto dto = noticeservice.detailNotice(num);
+      if(dto == null||dto.getNum() == 0)
+         return new ResponseEntity(HttpStatus.NO_CONTENT);
+      return new ResponseEntity(dto,HttpStatus.OK);
+   }
+   
+   @ApiOperation(value = "공지사항을 추가한다.", response = NumberResult.class)
+   @RequestMapping(value="/addNotice",method = RequestMethod.POST)
+   public ResponseEntity<NumberResult> addNotice(@RequestBody NoticeDto notice) throws Exception{
+      logger.info("3.addNotice"+new Date());
+      int total = noticeservice.addNotice(notice);
+      NumberResult nr = new NumberResult();
+      nr.setCount(total);
+      nr.setName("addNotice");
+      nr.setState("succ");
+      if(total<=0) {
+         nr.setCount(-1);
+         nr.setName("addNotice");
+         nr.setState("fail");
+         return new ResponseEntity<NumberResult>(nr, HttpStatus.OK);
+      }
+      return new ResponseEntity<NumberResult>(nr,HttpStatus.OK);
+   }
+   
+   @ApiOperation(value = "공지사항을 수정한다.", response = BoolResult.class)
+   @RequestMapping(value="/updateNotice/{num}",method = RequestMethod.POST)
+   public ResponseEntity<BoolResult> updateNotice(@RequestBody NoticeDto notice,@PathVariable int num) throws Exception{
+      logger.info("4.updateNotice"+new Date());
+      BoolResult result = new BoolResult();
+      notice.setNum(num);
+      boolean t = noticeservice.updateNotice(notice);
+      result.setCount(t);
+      result.setName("updateNotice");
+      result.setState("succ");
+      if(!t)
+         return new ResponseEntity(HttpStatus.NO_CONTENT);
+      return new ResponseEntity<BoolResult>(result,HttpStatus.OK);
+   }
+   @ApiOperation(value =" 공지사항을 삭제한다.",response = BoolResult.class)
+   @RequestMapping(value="/deleteNotice/{num}",method=RequestMethod.GET)
+   public ResponseEntity<BoolResult> deleteBoard(@PathVariable int num) throws Exception{
+      logger.info("6.deleteNotice"+new Date());
+      BoolResult result = new BoolResult();
+      boolean t = noticeservice.deleteNotice(num);
+      result.setCount(t);
+      result.setName("deleteNotice");
+      result.setState("succ");
+      if(!t)
+         return new ResponseEntity(HttpStatus.NO_CONTENT);
+      return new ResponseEntity<BoolResult>(result,HttpStatus.OK);
+   }
+}
