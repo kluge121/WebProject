@@ -1,0 +1,106 @@
+<%@page import="java.text.SimpleDateFormat"%>
+<%@page import="java.util.Date"%>
+<%@ page language="java" contentType="text/html; charset=utf-8"
+	pageEncoding="utf-8"%>
+<%
+	request.setCharacterEncoding("utf-8");
+%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<fmt:requestEncoding value="utf-8" />
+
+
+<script type="text/javascript">
+	function searchClick(){
+		$("#search_form").submit();
+	}
+</script>
+
+<header id="header">
+	<div class="inner">
+
+		<a href="index.do" class="logo"> <span class="symbol"><img
+				src="<%= request.getContextPath() %>/img/header-logo.jpg" alt="" /></span><span class="title">SAFE
+				FOOD</span>
+		</a>
+
+		<nav>
+			<ul>
+				<li><a href="#menu">메뉴</a></li>
+			</ul>
+		</nav>
+
+	</div>
+</header>
+
+
+<nav id="menu">
+	<c:if test="${empty sessionScope.id}">
+		<h2 class='login'>
+			<a href="#">로그인</a>
+		</h2>
+		<div id='loginForm'>
+			<form action="login.do" method="post">
+				<input type="text" id="_u_Id" name="u_Id" placeholder="ID"/>
+				<input type="password" id="_u_Password" name="u_Password" placeholder="PASSWORD"/>
+				<input type="hidden" name="action" value="LOGIN">
+				<br/>
+				<input type="submit" class="primary small" id="_login" value="LOGIN">
+			</form>
+		</div>
+	</c:if>
+						
+	<c:if test="${not empty sessionScope.id}">
+		<div id='logoutForm'>
+			<h2>반갑습니다, ${alias}!</h2>
+			<ul class="actions">
+				<li>
+					<a href="logout.do" class="button primary small" id="_logout">로그아웃</a>
+				</li>
+				<li>
+					<div id='mypageForm'>
+						<a href="mypage.do" class="button primary small" id="_myPage">내 정보</a>
+					</div>
+				</li>
+			</ul>
+
+
+
+			<c:if test="${sessionScope.id == 'admin'}">
+				<ul class="actions">
+					<li>
+						<div id='adminForm'>
+							<a
+								onclick="searchClick()"
+								class="button primary small" id="_manage">회원관리</a>
+						</div>
+					</li>
+					<li>
+						<div id='write'>
+							<a href="food_add_bf.do"
+								class="button primary small" id="">상품추가</a>
+						</div>
+					</li>
+				</ul>
+				
+				<form id="search_form" method="post" action="showmember.do"></form>
+			</c:if>
+		</div>
+	</c:if>
+
+	<c:if test="${empty sessionScope.id}">
+		<h2>
+			<a href="join_bf.do" class="keep">회원가입</a>
+		</h2>
+	</c:if>
+
+	<br />
+	<h2>메뉴</h2>
+	<br/>
+	<ul>
+		<li><a href="index.do" class="keep">홈</a></li>
+		<li><a href="notice.jsp" class="keep">공지사항</a></li>
+		<li><a href="generic.jsp" class="keep">내 섭취 정보</a></li>
+		<li><a href="generic.jsp" class="keep">예상 섭취 정보</a></li>
+	</ul>
+</nav>

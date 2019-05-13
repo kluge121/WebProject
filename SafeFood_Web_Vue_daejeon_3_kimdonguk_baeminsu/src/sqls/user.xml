@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.edu">
+
+
+
+	<insert id="addUserInfo" parameterType="com.ssafy.edu.dto.UserInfoDto">
+		INSERT INTO USER (ID, PASSWORD, NAME, ADDRESS, TEL) VALUES(#{id}, #{password}, #{name}, #{address}, #{tel})
+	</insert>
+	
+	
+	<insert id="addUserAllergy" parameterType="java.util.Map">
+		INSERT INTO USER_ALLERGY (ID, ALLERGY_INFO) VALUES(#{u_Id}, #{u_Allergy})
+	</insert>
+	
+	
+	<update id="updateUserInfo" parameterType="com.ssafy.edu.dto.UserInfoDto">
+		UPDATE USER SET PASSWORD=#{password}, NAME=#{name}, ADDRESS=#{address}, TEL=#{tel} WHERE ID=#{id}
+	</update>
+	
+	
+	<insert id="updateUserAllergy" parameterType="java.util.Map">
+		INSERT INTO USER_ALLERGY (ID, ALLERGY_INFO) VALUES(#{u_Id}, #{u_Allergy})
+	</insert>
+	
+	
+	<delete id="deleteUserAllergy" parameterType="java.lang.String">
+		DELETE FROM USER_ALLERGY WHERE ID=#{u_Id}
+	</delete>
+	
+	
+	<delete id="deleteUser" parameterType="java.lang.String">
+		DELETE FROM USER WHERE ID=#{u_Id}
+	</delete>
+
+
+	<select id="getUserInfoById" parameterType="java.lang.String" resultType="com.ssafy.edu.dto.UserInfoDto">
+		SELECT ID, PASSWORD, NAME, ADDRESS, TEL FROM USER WHERE ID=#{u_Id}
+	</select>
+	
+	<select id="getUserInfoByTelName" parameterType="java.util.Map" resultType="com.ssafy.edu.dto.UserInfoDto">
+		SELECT ID, PASSWORD, NAME, ADDRESS, TEL FROM USER WHERE TEL=#{u_Tel} AND NAME=#{u_Name}
+	</select>
+	
+	<select id="getUserAllegyById" parameterType="java.lang.String" resultType="com.ssafy.edu.dto.AllergyDto">
+		SELECT ALLERGY_INFO FROM USER_ALLERGY WHERE ID=#{u_Id}
+	</select>
+
+
+
+	<select id="getAllUserInfo" resultType="com.ssafy.edu.dto.UserInfoDto">
+		SELECT ID, PASSWORD, NAME, ADDRESS, TEL FROM USER
+	</select>
+
+	<select id="getAllUserAllegy" resultType="com.ssafy.edu.dto.AllergyDto">
+		SELECT ID, ALLERGY_INFO FROM USER_ALLERGY
+	</select>
+	
+
+
+
+	<select id="findUser" parameterType="java.util.Map" resultType="com.ssafy.edu.dto.UserInfoDto">	
+	
+		<choose>
+			<when test="type != '' and type != null and keyword != '' and keyword != null">
+				<if test="type == 1"> SELECT ID,NAME,ADDRESS,TEL FROM USER WHERE ID LIKE CONCAT('%',#{keyword},'%') </if>
+				<if test="type == 2"> SELECT ID,NAME,ADDRESS,TEL FROM USER WHERE NAME LIKE CONCAT('%',#{keyword},'%') </if>
+				<if test="type == 3"> SELECT ID,NAME,ADDRESS,TEL FROM USER WHERE TEL LIKE CONCAT('%',#{keyword},'%') </if>
+				<if test="type == 4"> SELECT ID,NAME,ADDRESS,TEL FROM USER WHERE ADDRESS LIKE CONCAT('%',#{keyword},'%') </if>
+				
+				<if test="type == 5"> SELECT U.ID,U.NAME,U.ADDRESS,U.TEL
+									  FROM USER U,USER_ALLERGY A
+									  WHERE U.ID=A.ID AND A.ALLERGY_INFO LIKE CONCAT('%',#{keyword},'%') </if>
+			</when>
+			
+			<otherwise>
+					 SELECT ID,NAME,ADDRESS,TEL FROM USER
+			</otherwise>
+		</choose>
+
+		
+	</select>
+
+
+
+
+
+
+	
+
+	
+	
+</mapper>

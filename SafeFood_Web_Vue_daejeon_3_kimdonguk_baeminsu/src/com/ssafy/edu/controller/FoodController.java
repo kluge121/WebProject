@@ -1,0 +1,231 @@
+package com.ssafy.edu.controller;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+import com.ssafy.edu.dto.Food;
+import com.ssafy.edu.dto.FoodPaging;
+
+import com.ssafy.edu.service.IFoodService;
+
+import util.FoodSaxParser;
+
+@Controller
+public class FoodController {
+
+	private static final Logger logger = LoggerFactory.getLogger(FoodController.class);
+
+	@Autowired
+	private IFoodService service;
+
+	@RequestMapping(value = "datainit.do", method = RequestMethod.GET)
+	public String getFoodList(Model model) throws Exception {
+
+		int count = service.getTotalFoodCount();
+		if (count == 0) {
+
+			List<Food> list = new FoodSaxParser().getFoods();
+
+			for (Food food : list) {
+				service.addFood(food);
+				for (String s : food.getU_Allergy()) {
+					if (s.trim().equals("해당없음"))
+						break;
+					HashMap<String, String> map = new HashMap<>();
+					map.put("food_id", String.valueOf(food.getCode()));
+					map.put("allergy", s);
+					service.addAllegy(map);
+				}
+			}
+		}
+		return "redirect:/foodlist.do?page=1";
+	}
+
+	@RequestMapping(value = "foodlist.do", method = RequestMethod.GET)
+	public String getFoodList(Model model, Integer page) throws Exception {
+
+		int count = service.getTotalFoodCount();
+		if (count > 0) {
+			FoodPaging paging = service.makePage(String.valueOf(page));
+			model.addAttribute("paging", paging);
+		}
+		return "index";
+	}
+
+	@RequestMapping(value = "foodsearchlist.do", method = RequestMethod.POST)
+	public String getFoodList(Model model, String keyword, String type, String page) throws Exception {
+
+		int typeInt = Integer.parseInt(type);
+		int count = service.getTotalFoodCount();
+		if (count > 0) {
+			FoodPaging paging = service.makePageSearch(page, typeInt, keyword, Integer.parseInt(page));
+			model.addAttribute("paging", paging);
+			model.addAttribute("searchType", typeInt);
+			model.addAttribute("searchKeyword", keyword);
+		}
+		return "index";
+	}
+
+	@RequestMapping(value = "food_add_bf.do", method = RequestMethod.GET)
+	public String food_add_bf(Model model) throws Exception {
+		return "food/generic_write";
+	}
+
+	@RequestMapping(value = "food_add_af.do", method = RequestMethod.POST)
+	public String food_add_af(Model model, Food f, MultipartFile uploadFile) throws Exception {
+
+		String rootPath = FoodController.class.getResource("/").getPath();
+		String fileName = null;
+
+		if (uploadFile != null) {
+			rootPath = rootPath.substring(0, rootPath.indexOf("WEB-INF"));
+			rootPath += "img";
+			fileName = String.valueOf(f.getCode()) + ".jpg";
+			File saveFile = new File(rootPath + "/" + fileName);
+			uploadFile.transferTo(saveFile);
+			f.setImg("img/" + fileName);
+
+		}
+
+		service.addFood(f);
+		if (f.getU_Allergy() != null) {
+			for (String a : f.getU_Allergy()) {
+				Map<String, String> map = new HashMap<>();
+				map.put("food_id", String.valueOf(f.getCode()));
+				map.put("allergy", a);
+				service.addAllegy(map);
+			}
+		}
+		model.addAttribute("nurl", "index.do");
+		model.addAttribute("stat", "성공");
+		model.addAttribute("msg", "식품 추가 성공");
+
+		return "success";
+	}
+
+	@RequestMapping(value = "food_remove.do", method = RequestMethod.GET)
+	public String food_delete(Model model, String code) throws Exception {
+		service.deleteFood(Integer.parseInt(code));
+
+		String rootPath = FoodController.class.getResource("/").getPath();
+		rootPath = rootPath.substring(0, rootPath.indexOf("WEB-INF"));
+		rootPath += "img";
+		String fileName = code;
+
+		// 이미지 파일 있다면 삭제
+		String filePattern = fileName + ".";
+		File path = new File(rootPath);
+		String[] fileList = path.list(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.startsWith(filePattern);
+			}
+		});
+
+		if (fileList.length > 0) {
+			String deleteFileName = rootPath + fileList[0];
+			File deleteFile = new File(deleteFileName);
+			System.out.println(deleteFileName);
+			deleteFile.delete();
+
+		}
+
+		model.addAttribute("nurl", "index.do");
+		model.addAttribute("stat", "성공");
+		model.addAttribute("msg", "식품 삭제 성공");
+
+		return "success";
+	}
+
+	@RequestMapping(value = "food_update_bf.do", method = RequestMethod.GET)
+	public String food_update_bf(Model model, String code) throws Exception {
+		Food f = service.getFood(code);
+		String[] allergys = f.allergyStringConvertArr(service.getFoodAllergy(f.getCode()));
+		f.setU_Allergy(allergys);
+		model.addAttribute("info", f);
+		return "food/generic_update";
+	}
+
+	@RequestMapping(value = "food_update_af.do", method = RequestMethod.POST)
+	public String food_update_af(Model model, Food f, String[] u_Allergy, MultipartFile uploadFile) throws Exception {
+
+		String rootPath = FoodController.class.getResource("/").getPath();
+		rootPath = rootPath.substring(0, rootPath.indexOf("WEB-INF"));
+		rootPath += "img";
+		String fileName = null;
+
+		if (uploadFile != null) {
+
+			// 기존의 파일이 있다면 삭제
+			String filePattern = fileName + ".";
+			File path = new File(rootPath);
+			String[] fileList = path.list(new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					// TODO Auto-generated method stub
+					return name.startsWith(filePattern);
+				}
+			});
+
+			if (fileList.length > 0) {
+				String deleteFileName = rootPath + fileList[0];
+				File deleteFile = new File(deleteFileName);
+				System.out.println(deleteFileName);
+				deleteFile.delete();
+			}
+
+		
+			fileName = String.valueOf(f.getCode()) + ".jpg";
+			File saveFile = new File(rootPath + "/" + fileName);
+			uploadFile.transferTo(saveFile);
+			f.setImg("img/" + fileName);
+
+		} else {
+			f.setImg("img/none.png");
+		}
+
+		service.updateFood(f);
+		service.deleteAllergyByCode(f.getCode());
+
+		if (f.getU_Allergy() != null) {
+			for (String a : f.getU_Allergy()) {
+				Map<String, String> map = new HashMap<>();
+				map.put("food_id", String.valueOf(f.getCode()));
+				map.put("allergy", a);
+				service.addAllegy(map);
+			}
+		}
+		model.addAttribute("nurl", "index.do");
+		model.addAttribute("stat", "성공");
+		model.addAttribute("msg", "식품 업데이트 성공");
+		return "success";
+	}
+
+	@RequestMapping(value = "food_detail.do", method = RequestMethod.GET)
+	public String food_detail(Model model, String code) throws Exception {
+		Food f = service.getFood(code);
+		f.setU_Allergy(f.allergyStringConvertArr(service.getFoodAllergy(Integer.parseInt(code))));
+		String allergyStr = f.allergyArrConvertString();
+		model.addAttribute("info", f);
+		model.addAttribute("alle", allergyStr);
+		return "food/generic";
+	}
+
+}

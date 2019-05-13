@@ -1,0 +1,567 @@
+<%@ page language="java" contentType="text/html; charset=utf-8"
+    pageEncoding="utf-8"%>
+ <%request.setCharacterEncoding("utf-8"); %>
+ 
+ <%
+	request.setCharacterEncoding("utf-8");
+%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<fmt:requestEncoding value="utf-8" />
+ 
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="./css/table.css"/>
+<title>SSAFY</title>
+  <script src="https://unpkg.com/vue"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <style type="text/css">
+  svg rect {
+       fill: blue;
+    }
+    svg text {
+       fill: yellow;
+       font: 12px sans-serif;
+       text-anchor: end;
+    }
+    .nicecolor {
+      color:black;
+     }
+    .nicecolor:hover {
+      color:white; background-color: blue; 
+     }
+  </style>
+</head>
+<body>
+<div id='app'>
+<div class='headtitle'><h2 v-html='currenttitle'></h2></div>
+<div class='search_box'>
+<a href='#' @click='showlist(1)'>ê²ìí ì¶ê°</a> | 
+<a href='#' @click='showlist(0)'>ëª¨ë ê²ìë¬¼ ë³´ê¸°</a>
+</div>
+
+<component v-bind:is = "currentview"></component>  
+</div>
+<script type="text/x-template" id="listhrmtemplate">
+<div>
+<div>
+<table class='list_table'>
+<col width="10%"><col width="20%">
+<col width="20%"><col width="20%"><col width="10%"><col width="10%">
+<tr>
+  <th>ë²í¸</th>
+  <th>ì¬ì©ì</th>
+  <th>ì ëª©</th>
+  <th>ë ì§</th>
+  <th>ì¡°íì</th>
+	<th>ë¹ê³ </th>
+</tr>
+<tr v-for="board in boards" class = "nicecolor">
+  <td v-html="board.number"></td>
+  <td v-html="board.user_id"></td>
+  <td v-html="board.title" @click="show_detail(board.number)"></td>
+  <td v-html="board.date"></td>
+  <td v-html="board.click"></td>
+	<td class='button' @click="deleteboard(board.number)"><input type="button" class='blue' value='ì­ì '></button></td>
+</tr>
+</table>
+</div>
+<div>
+</script>
+<script type="text/x-template" id="addtemplate">
+<div>
+	<div>
+		<form action="" method="post" id="_frmForm" name="frmForm" @submit.prevent="addBoard">
+			<table class="content_table">
+				<colgroup>
+      				<col style="width:30%;" />
+      				<col style="width:70%;" />                     
+				</colgroup>   
+				<tr>
+					<th>ìì±ì</th>
+					<td><input data-msg="ìì±ì" type="text" name="user_id" id="_name" size="30" v-model="cname"/></td>
+				</tr>
+				<tr>
+					<th>ì ëª©</th>
+					<td><input data-msg="ì ëª©" type="text" name="title"  id="_title" size="20" v-model="ctitle" /></td>
+				</tr>
+				<tr>
+					<th>ë´ì©</th>
+					<td><input data-msg="ë´ì©" type="text" name="content"  id="_content" size="30" v-model="ccontent" /></td>
+				</tr>
+				<tr>
+					<th>ìì±ì¼</th>
+					<td><input data-msg="ìì±ì¼" type="date" name="start_date" id="_start_date" size="30" v-model="cstart_date"/></td>
+				</tr>
+				<tr>
+					<td colspan="2" style="height:50px; text-align:center;">
+					<button type="submit" name="button">ê²ìíì¶ê°</button></td>
+				</tr>			
+			</table>
+		</form>
+	</div>
+</div>
+</script>
+<script type="text/x-template" id="addanswertemplate">
+<div>
+	<div>
+		<form action="" method="post" id="_frmForm" name="frmForm" @submit.prevent="addAnswer">
+			<table class="content_table">
+				<colgroup>
+      				<col style="width:30%;" />
+      				<col style="width:70%;" />                     
+				</colgroup>   
+				<tr>
+					<th>ì ëª©</th>
+					<td><input data-msg="ì ëª©" type="text" name="title"  id="_title" size="20" v-model="ctitle" /></td>
+				</tr>
+				<tr>
+					<th>ë´ì©</th>
+					<td><input data-msg="ë´ì©" type="text" name="content"  id="_content" size="30" v-model="ccontent" /></td>
+				</tr>
+				<tr>
+					<td colspan="2" style="height:50px; text-align:center;">
+					<button type="submit" name="button">ëµë³ì¶ê°</button></td>
+				</tr>			
+			</table>
+		</form>
+	</div>
+</div>
+</script>
+<script type="text/x-template" id="detailtemplate">
+<div>
+	<table class='content_table'>
+		<col width="10%"><col width="20%">
+		<col width="20%"><col width="20%"><col width="10%">
+		<tr>
+			<th>ë²í¸</th>
+			<td v-html="board.number"></td>
+		</tr>
+		<tr>
+			<th>ìì±ì</th>
+			<td v-html="board.user_id"></td>
+		</tr>
+		<tr>
+			<th>ì ëª©</th>
+			<td v-html="board.title"></td>
+		</tr>
+		<tr>
+			<th>ë´ì©</th>
+			<td v-html="board.content"></td>
+		</tr>
+		<tr>
+			<th>ìì±ì¼</th>
+			<td v-html="board.date"></td>
+		</tr>
+		<tr>
+			<td class='button' @click="updateboard(board.number)"><input type="button" class='blue' value='ìì '></button></td>
+			<td class='button' @click="deleteboard(board.number)"><input type="button" class='blue' value='ì­ì '></button></td>
+			<td class='button' @click="showlist(0)"><input type="button" class='blue' value='ëìê°ê¸°'></button></td>
+		</tr>
+		<tr v-if="check === 'noshow'">
+			<td class='button' @click="addanswer(board.number)"><input type="button" class='blue' value='ëµê¸ì¶ê°'></button></td>
+		</tr>
+	</table>
+	<div v-if="check === 'show'">
+	<table class='content_table'>
+		<tr>
+			<th>ì ëª©</th>
+			<td v-html="answer.title"></td>
+		</tr>
+		<tr>
+			<th>ë´ì©</th>
+			<td v-html="answer.content"></td>
+		</tr>
+		<tr>
+			<th>ìì±ì¼</th>
+			<td v-html="answer.date"></td>
+		</tr>
+		<tr>
+			<td class='button' @click="updateanswer(answer.number)"><input type="button" class='blue' value='ìì '></button></td>
+		</tr>
+		</table>
+
+	</div>
+</div>
+</script>
+<script type="text/x-template" id="updateanswertemplate">
+<div>
+	<div>
+		<form action="" method="post" id="_frmForm" name="frmForm" @submit.prevent="updateAnswer">
+			<table class="content_table">
+				<colgroup>
+      				<col style="width:30%;" />
+      				<col style="width:70%;" />                     
+				</colgroup>   
+				<tr>
+					<th>ì ëª©</th>
+					<td><input id="_title" :value="board.title" type="text" size="20"/></td>
+				</tr>
+				<tr>
+					<th>ë´ì©</th>
+					<td><input id="_content" :value="board.content" type="text" size="30"/></td>
+				</tr>
+				<tr>
+					<td colspan="2" style="height:50px; text-align:center;">
+					<button type="submit" name="button">ëµë³ ìì </button></td>
+				</tr>			
+			</table>
+		</form>
+	</div>
+</div>
+</script>
+<script type="text/x-template" id="updatetemplate">
+<div>
+	<div>
+		<form action="" method="post" id="_frmForm" name="frmForm" @submit.prevent="updateBoard">
+			<table class="content_table">
+				<colgroup>
+      				<col style="width:30%;" />
+      				<col style="width:70%;" />                     
+				</colgroup>   
+				<tr>
+					<th>ìì±ì</th>
+					<td v-html="board.number"></td>
+				</tr>
+				<tr>
+					<th>ì ëª©</th>
+					<td><input id="_title" :value="board.title" type="text" size="20"/></td>
+				</tr>
+				<tr>
+					<th>ë´ì©</th>
+					<td><input id="_content" :value="board.content" type="text" size="30"/></td>
+				</tr>
+				<tr>
+					<th>ìì±ì¼</th>
+					<td><input id="_start_date" :value="board.date" type="text"/></td>
+				</tr>
+				<tr>
+					<td colspan="2" style="height:50px; text-align:center;">
+					<button type="submit" name="button">ê²ìí ìì </button></td>
+				</tr>			
+			</table>
+		</form>
+	</div>
+</div>
+</script>
+
+<script type="text/javascript">
+var addanswer = Vue.component('addanswer',{
+	template: '#addanswertemplate',
+	data(){
+		return{
+			boards: null,
+			loading: true,
+			errored: false,
+			ctitle:'',
+			ccontent:'',
+			cstart_date:''
+		}
+	},
+	methods:{
+		addAnswer(){
+			if(this.ctitle==''){alert('ì ëª©ì ìë ¥íì¸ì.');return;}
+			if(this.ccontent==''){alert('ë´ì©ì ìë ¥íì¸ì.');return;}
+			this.cstart_date=new Date();
+				
+			axios.post('http://localhost:8197/ssafyvue/api/addBoardAnswer/'+App.number,{
+				title: this.ctitle,
+				content: this.ccontent,
+				date: this.cstart_date
+			}).then(function(response){
+				if(response.data.state=='succ'){
+					alert(response.data.name+"ì´ ì¤íëììµëë¤.");
+					location.href='./index.html';
+				}else{
+					alert(response.data.name+"ì ì¤í¨íììµëë¤.");
+					location.href='./index.html';
+				}
+			});
+		}}
+	});
+var detailboard = Vue.component('detailboard',{
+	template: '#detailtemplate',
+	data(){
+		return{
+			info: null,
+			loading: true,
+			errored: false,
+			board:{},
+			answer: {},
+			check: "show"
+		}
+	},
+	mounted(){
+		axios
+		.get('http://localhost:8197/ssafyvue/api/findBoardByNum/'+App.number)
+		.then(response => (this.board = response.data))
+		.catch(error =>{
+			console.log(error)
+			this.errored = true
+		})
+		.finally(() => this.loading = false);
+		
+		axios
+		.get('http://localhost:8197/ssafyvue/api/findAnswerBoardByNum/'+App.number)
+		.then(response => {
+			this.answer = response.data
+			console.log(this.answer);
+			if(this.answer.title==null){
+				this.check="noshow";
+			}
+		})
+		.catch(error=>{
+			console.log(error)
+			this.errored = true
+		})
+		.finally(() => this.loading = false);
+		
+
+	},
+	methods:{
+		showlist:function(num){
+			App.currentview='boardlist';
+			App.showlist(0);
+		},
+		updateboard:function(num){
+			App.number = num;
+			App.currentview = 'updateboard';
+			App.showlist(3);
+		},
+		deleteboard:function(num){
+			App.number = num;
+			axios
+			.post('http://localhost:8197/ssafyvue/api/deleteBoard/'+App.number)
+			.then(function(response){
+				if(response.data.state=='succ'){
+  					alert(response.data.name+"ì´ ì¤íëììµëë¤.");
+  					location.href='./index.html';
+  				}else{
+  					alert(response.data.name+"ì´ ì¤í¨íììµëë¤.");
+  					location.href='./index.html';
+  				}
+			})
+			App.currentview = 'boardlist';
+			App.showlist(0);
+		},
+		addanswer:function(num){
+			App.number = num;
+			App.currentview = 'addanswer';
+			App.showlist(4);
+		},
+		updateanswer:function(num){
+			App.number = num;
+			App.currentview = 'updateanswer';
+			App.showlist(5);
+		}
+	}
+});
+var boardlist = Vue.component('boardlist',{
+    template: '#listhrmtemplate',
+    data(){
+        return {
+          upHere : false,
+          boards: [],
+          loading: true,
+          errored: false 
+        }
+      },
+      methods:{
+    	show_detail:function(number){
+    		alert(number+"ìì¸ë³´ê¸°");
+    		App.number = number;
+    		axios
+    		.get('http://localhost:8197/ssafyvue/api/updateBoardViewCnt/'+App.number)
+    		.then(function(response){
+      			if(response.data.state=='succ'){
+      			}else{
+      				alert(response.data.name+"ì´ ì¤í¨íììµëë¤.");
+      				location.href='./index.html';
+      			}
+      		})
+      		App.currentview = 'detailboard';
+    		App.showlist(2);
+    	},
+      	 deleteboard:function(number){
+      		alert(number);
+      		App.number = number;
+      		axios
+      			.post('http://localhost:8197/ssafyvue/api/deleteBoard/'+App.number)
+      			.then(function(response){
+      				if(response.data.state=='succ'){
+      					alert(response.data.name+"ì´ ì¤íëììµëë¤.");
+      					location.href='./index.html';
+      				}else{
+      					alert(response.data.name+"ì´ ì¤í¨íììµëë¤.");
+      					location.href='./index.html';
+      				}
+      			})
+      			.catch(error =>{
+      				console.log(error)
+      				this.errored = true
+      			})
+      			.finally(() => this.loading = false);
+      	} 
+      },
+      mounted () {
+        axios
+          .get('http://localhost:8197/ssafyvue/api/findAllBoard')
+          //.get('./emp.json')
+          .then(response => (this.boards = response.data))
+          .catch(error => {
+            console.log(error)
+            this.errored = true
+          })
+          .finally(() => this.loading = false);
+      }
+});
+var addboard = Vue.component('addboard',{
+	template: '#addtemplate',
+	data(){
+		return{
+			boards: null,
+			loading: true,
+			errored: false,
+			cname:'',
+			ctitle:'',
+			ccontent:'',
+			cstart_date:''
+		}
+	},
+	methods:{
+		addBoard(){
+			if(this.cname==''){alert('ìì´ëë¥¼ ìë ¥íì¸ì.'); return;}
+			if(this.ctitle==''){alert('ì ëª©ì ìë ¥íì¸ì.');return;}
+			if(this.ccontent==''){alert('ë´ì©ì ìë ¥íì¸ì.');return;}
+			this.cstart_date=new Date();
+				
+			axios.post('http://localhost:8197/ssafyvue/api/addBoard',{
+				user_id: this.cname,
+				title: this.ctitle,
+				content: this.ccontent,
+				date: this.cstart_date
+			}).then(function(response){
+				if(response.data.state=='succ'){
+					alert(response.data.name+"ì´ ì¤íëììµëë¤.");
+					location.href='./index.html';
+				}else{
+					alert(response.data.name+"ì ì¤í¨íììµëë¤.");
+					location.href='./index.html';
+				}
+			});
+		}}
+	});
+var updateanswer = Vue.component('updateanswer',{
+	template: '#updateanswertemplate',
+	data(){
+		return{
+			boards: null,
+			loading: true,
+			errored: false,
+			answer:{},
+			ctitle:'',
+			ccontent:'',
+			cstart_date:''
+		}
+	},
+	mounted(){
+		axios
+		.get('http://localhost:8197/ssafyvue/api/findAnswerBoardByNum/'+App.number)
+		.then(response => (this.answer = response.data))
+		.catch(error =>{
+			console.log(error)
+			this.errored = true
+		})
+		.finally(() => this.loading = false);
+	},
+	methods:{
+		updateAnswer:function(num){
+			if(this.ctitle==''){alert('ì ëª©ì ìë ¥íì¸ì.');return;}
+			if(this.ccontent==''){alert('ë´ì©ì ìë ¥íì¸ì.');return;}
+			this.cstart_date=new Date();
+			axios.post('http://localhost:8197/ssafyvue/api/updateBoardAnswer'+App.num,{
+				title: this.ctitle,
+				content: this.ccontent,
+				date: this.cstart_date
+			}).then(function(response){
+				if(response.data.state=='succ'){
+					alert(response.data.name+"ì´ ì¤íëììµëë¤.");
+					location.href='./index.html';
+				}else{
+					alert(response.data.name+"ì ì¤í¨íììµëë¤.");
+					location.href='./index.html';
+				}
+			});
+		}}
+	});	
+var updateboard = Vue.component('updateboard',{
+	template: '#updatetemplate',
+	data(){
+		return{
+			boards: null,
+			loading: true,
+			errored: false,
+			cname:'',
+			ctitle:'',
+			ccontent:'',
+			cstart_date:''
+		}
+	},
+	methods:{
+		updateBoard:function(num){
+			if(this.cname==''){alert('ìì´ëë¥¼ ìë ¥íì¸ì.'); return;}
+			if(this.ctitle==''){alert('ì ëª©ì ìë ¥íì¸ì.');return;}
+			if(this.ccontent==''){alert('ë´ì©ì ìë ¥íì¸ì.');return;}
+			if(this.cstart_date==''){alert('ìì±ì¼ì ì ííì¸ì.');return;}
+				
+			axios.post('http://localhost:8197/ssafyvue/api/updateBoard'+App.num,{
+				user_id: this.cname,
+				title: this.ctitle,
+				content: this.ccontent,
+				date: this.cstart_date
+			}).then(function(response){
+				if(response.data.state=='succ'){
+					alert(response.data.name+"ì´ ì¤íëììµëë¤.");
+					location.href='./index.html';
+				}else{
+					alert(response.data.name+"ì ì¤í¨íììµëë¤.");
+					location.href='./index.html';
+				}
+			});
+		}}
+	});
+	
+	
+var App=new Vue({
+  el: '#app',
+  data: {
+	  currenttitle:'SSAFY BOARD LIST',
+	  empid:'',
+	  currentview: 'boardlist',
+      allviews:['boardlist','addboard','detailboard','updateboard','addanswer','updateanswer'],
+      cutt:['SSAFY BOARD LIST','ADD BOARD','DETAILBOARD','UPDATE BOARD','ADD ANSWER','UPDATE ANSWER']
+   },
+   components: {
+       boardlist: boardlist,
+       addboard: addboard,
+       detailboard: detailboard,
+       addanswer: addanswer,
+       updateanswer: updateanswer
+     },
+     methods:{
+    	 showlist: function (val) {
+    		 //alert(val);
+			 this.currentview=this.allviews[val];
+    		 this.currenttitle=this.cutt[val];
+    		 //listhrm
+         }
+     }
+});
+Vue.config.devtools = true;
+ </script>
+</body>
+</html>

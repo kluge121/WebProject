@@ -1,0 +1,18 @@
+{
+    "cols": [
+        {"id":"","label":"Topping","pattern":"","type":"string"},
+        {"id":"","label":"Slices","pattern":"","type":"number"}
+    ],  
+     
+    "rows": [
+        {"c":[{"v":"탄수화물","f":null},{"v":22,"f":null}]},
+        {"c":[{"v":"나트륨","f":null},{"v":5.5,"f":null}]},
+        {"c":[{"v":"단백질","f":null},{"v":3,"f":null}]},
+        {"c":[{"v":"당류","f":null},{"v":19,"f":null}]},
+        {"c":[{"v":"지방","f":null},{"v":8,"f":null}]},
+        {"c":[{"v":"포화지방","f":null},{"v":4,"f":null}]},
+        {"c":[{"v":"트랜스지방","f":null},{"v":0,"f":null}]}
+        
+        
+    ]
+}
